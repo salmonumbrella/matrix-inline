@@ -94,6 +94,7 @@ type InlineClient struct {
 	bridgeStateVersion         uint32
 	bridgeRecoveryCursor       int64
 	dialogSyncCursor           string
+	topicRetryAfter            map[int64]time.Time
 	hiddenDialogsDefault       hiddenDialogsPolicy
 	hiddenDialogsOverride      hiddenDialogsPolicy
 	channelMuteDefault         string
@@ -411,6 +412,9 @@ func (ic *InlineClient) HandleMatrixMessage(ctx context.Context, msg *bridgev2.M
 			WithIsCertain(true).
 			WithSendNotice(true).
 			WithErrorReason(event.MessageStatusUnsupported)
+	}
+	if err := validateInlineReplyTarget(msg, chatID); err != nil {
+		return nil, bridgev2.WrapErrorInStatus(err).WithErrorAsMessage().WithIsCertain(true).WithSendNotice(true).WithErrorReason(event.MessageStatusUnsupported)
 	}
 
 	switch effectiveMatrixMessageType(msg.Content) {
@@ -1559,7 +1563,7 @@ func rateLimitRetryDelay(err error, fallback time.Duration) time.Duration {
 
 func (ic *InlineClient) FetchMessages(ctx context.Context, params bridgev2.FetchMessagesParams) (*bridgev2.FetchMessagesResponse, error) {
 	if params.ThreadRoot != "" {
-		return &bridgev2.FetchMessagesResponse{HasMore: false}, nil
+		return nil, fmt.Errorf("Inline Matrix thread history is unsupported; use the separate child conversation: %w", bridgev2.ErrUnsupportedMessageType)
 	}
 
 	chat, err := chatIDFromPortal(params.Portal)
