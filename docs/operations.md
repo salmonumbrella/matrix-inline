@@ -120,6 +120,25 @@ Permanent media projection failures (invalid schemes, reviewed terminal 4xx,
 or the configured size ceiling) produce a stable Matrix unavailable notice and
 allow the lossless cursor to continue. Timeouts, 429, and 5xx remain retryable.
 
+### Rich messages and media
+
+Bold, italic, code, preformatted text and safe links survive both directions.
+Entity ranges use checked UTF-16 offsets. Only typed mentions whose identities
+are verified for the current login become user mentions; unknown identities
+stay readable and group mentions never become room-wide broadcasts.
+
+Native message revisions take precedence over edit dates. Older or equal
+revisions do not replace accepted content. When the source supplies neither,
+content fingerprints suppress identical replays but cannot establish an order
+between different revisions. Formatting changes are included in fingerprints.
+
+Caption edits reuse the saved Matrix media object, including after restart.
+Caption-only edits require the original Matrix media type, URI, filename and
+attachment metadata. Clients that rewrite or omit that metadata can receive an
+explicit unsupported error. Replacing a file through an edit is unsupported. Old messages without enough
+saved media identity reject caption edits rather than silently ignoring a file
+replacement.
+
 ### Hidden Inline dialogs
 
 The network config defaults `hidden_dialogs` to `exclude`. Dialogs whose Inline
